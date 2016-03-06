@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<configuration>
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%-5level] %d{HH:mm:ss.SSS} [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="console"/>
+    </root>
+    <logger name="io.grpc.netty" level="OFF" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+</configuration>

@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * GrpcAutoConfiguration
  */
 @Configuration
-@EnableConfigurationProperties(GRpcServerProperties.class)
+@EnableConfigurationProperties(GrpcServerProperties.class)
 public class GrpcAutoConfiguration {
     @Bean
     @ConditionalOnBean(annotation = GrpcService.class)

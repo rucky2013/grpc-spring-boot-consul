@@ -4,10 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Created by 延泽 on 3/6 0006.
- * GRpcServerProperties
+ * GrpcServerProperties
  */
 @ConfigurationProperties("grpc")
-public class GRpcServerProperties {
+public class GrpcServerProperties {
     /**
      * gRPC server port
      */

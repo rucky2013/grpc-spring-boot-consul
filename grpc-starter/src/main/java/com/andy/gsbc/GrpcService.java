@@ -1,6 +1,9 @@
 package com.andy.gsbc;
 
 import com.andy.gsbc.register.ServiceInfo;
+import org.springframework.stereotype.Service;
+
+import java.lang.annotation.*;
 
 /**
  *
@@ -8,6 +11,10 @@ import com.andy.gsbc.register.ServiceInfo;
  * @author  Furer Alexander
  * @since 0.0.1
  */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Service
 public @interface GrpcService {
     /**
      *

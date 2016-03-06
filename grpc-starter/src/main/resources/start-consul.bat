@@ -1,0 +1,1 @@
+consul.exe agent -server -data-dir ./data -bind 127.0.0.1 -bootstrap-expect=1
