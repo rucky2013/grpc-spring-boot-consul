@@ -1,6 +1,7 @@
 package com.andy.gsbc;
 
 import com.andy.gsbc.autoconfigure.GrpcServerProperties;
+import com.google.common.net.HostAndPort;
 import com.orbitz.consul.AgentClient;
 import com.orbitz.consul.Consul;
 import io.grpc.Server;
@@ -59,7 +60,7 @@ public class GrpcServerRunner implements CommandLineRunner {
                 ServerServiceDefinition serviceDefinition = (ServerServiceDefinition) bindServiceMethod.get().invoke(null, grpcService);
                 serverBuilder.addService(serviceDefinition);
 
-                Consul consul = Consul.builder().build();
+                Consul consul = Consul.builder().withHostAndPort(HostAndPort.fromString("192.168.118.152:8500")).build();
                 AgentClient agentClient = consul.agentClient();
                 agentClient.register(gRpcServerProperties.getPort(), 3L, "MyService", "1");
                 agentClient.pass("1","test");
