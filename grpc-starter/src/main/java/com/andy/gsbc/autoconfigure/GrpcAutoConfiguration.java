@@ -2,6 +2,8 @@ package com.andy.gsbc.autoconfigure;
 
 import com.andy.gsbc.GrpcServerRunner;
 import com.andy.gsbc.GrpcService;
+import com.andy.gsbc.register.RpcRegister;
+import com.andy.gsbc.register.RpcRegisterImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,5 +20,11 @@ public class GrpcAutoConfiguration {
     @ConditionalOnBean(annotation = GrpcService.class)
     public GrpcServerRunner grpcServerRunner(){
         return new GrpcServerRunner();
+    }
+
+    @Bean
+    @ConditionalOnBean(annotation = GrpcService.class)
+    public RpcRegister rpcRegister(){
+        return new RpcRegisterImpl();
     }
 }

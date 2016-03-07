@@ -11,7 +11,27 @@ public class GrpcServerProperties {
     /**
      * gRPC server port
      */
-    private int port = 6565;
+    private int port = 9966;
+
+    private String consulHost;
+
+    private String localIp;
+
+    public String getLocalIp() {
+        return localIp;
+    }
+
+    public void setLocalIp(String localIp) {
+        this.localIp = localIp;
+    }
+
+    public String getConsulHost() {
+        return consulHost;
+    }
+
+    public void setConsulHost(String consulHost) {
+        this.consulHost = consulHost;
+    }
 
     public int getPort() {
         return port;

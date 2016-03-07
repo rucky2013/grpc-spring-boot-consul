@@ -1,0 +1,4 @@
+grpc:
+    port: 9966
+    consulHost: 192.168.118.152:8500
+    localIp: 192.168.0.104

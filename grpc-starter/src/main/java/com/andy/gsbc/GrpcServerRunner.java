@@ -1,9 +1,13 @@
 package com.andy.gsbc;
 
 import com.andy.gsbc.autoconfigure.GrpcServerProperties;
+import com.andy.gsbc.register.RpcRegister;
+import com.andy.gsbc.register.ServiceInfo;
 import com.google.common.net.HostAndPort;
 import com.orbitz.consul.AgentClient;
 import com.orbitz.consul.Consul;
+import com.orbitz.consul.model.agent.ImmutableRegistration;
+import com.orbitz.consul.model.agent.Registration;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerServiceDefinition;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Optional;
@@ -27,7 +32,7 @@ import java.util.Optional;
  * runner
  */
 @Component
-public class GrpcServerRunner implements CommandLineRunner {
+public class GrpcServerRunner implements CommandLineRunner, DisposableBean {
 
     private static final Logger logger = LoggerFactory.getLogger(GrpcServerRunner.class);
 
@@ -42,6 +47,9 @@ public class GrpcServerRunner implements CommandLineRunner {
     @Autowired
     private GrpcServerProperties gRpcServerProperties;
 
+    @Autowired
+    private RpcRegister rpcRegister;
+
     private Server server;
 
     public GrpcServerRunner() {
@@ -49,16 +57,13 @@ public class GrpcServerRunner implements CommandLineRunner {
 
     public void run(String... strings) throws Exception {
         final ServerBuilder<?> serverBuilder = ServerBuilder.forPort(gRpcServerProperties.getPort());
-
         for (Object grpcService : applicationContext.getBeansWithAnnotation(GrpcService.class).values()) {
             final Class grpcServiceOuterClass =
                     AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).grpcServiceOuterClass();
             final String serviceName =
                     AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).serviceName();
             String version = AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).version();
-            if (version.contains(".")){
-                version = version.replace(".","_");
-            }
+
             final Optional<Method> bindServiceMethod =
                     Arrays.asList(ReflectionUtils.getAllDeclaredMethods(grpcServiceOuterClass)).stream().filter(method ->
                             bindServiceMethodName.equals(method.getName()) && 1 == method.getParameterCount()
@@ -69,10 +74,8 @@ public class GrpcServerRunner implements CommandLineRunner {
                         (ServerServiceDefinition) bindServiceMethod.get().invoke(null, grpcService);
                 serverBuilder.addService(serviceDefinition);
 
-                Consul consul = Consul.builder().withHostAndPort(HostAndPort.fromString("192.168.118.152:8500")).build();
-                AgentClient agentClient = consul.agentClient();
-                URL url = new URL("http://localhost:8080/health");
-                agentClient.register(gRpcServerProperties.getPort(), url, 3, serviceName, "1", version);
+                ServiceInfo serviceInfo = new ServiceInfo(serviceName,gRpcServerProperties.getPort(),version);
+                rpcRegister.registerRpc(serviceInfo);
                 logger.info("'{}' service has been registered.", serviceDefinition.getName());
             } else {
                 throw new IllegalArgumentException(String.format("Failed to find '%s' method on class %s.\r\n" +
@@ -103,11 +106,11 @@ public class GrpcServerRunner implements CommandLineRunner {
         awaitThread.setDaemon(false);
         awaitThread.start();
     }
-    //
-    //    @Override
-    //    public void destroy() throws Exception {
-    //        logger.info("Shutting down gRPC server ...");
-    //        Optional.ofNullable(server).ifPresent(Server::shutdown);
-    //        logger.info("gRPC server stopped.");
-    //    }
+
+    @Override
+    public void destroy() throws Exception {
+        logger.info("Shutting down gRPC server ...");
+        Optional.ofNullable(server).ifPresent(Server::shutdown);
+        logger.info("gRPC server stopped.");
+    }
 }
