@@ -23,7 +23,7 @@ import java.util.Map;
 @SpringBootApplication
 public class DemoServer {
 
-    @GrpcService(grpcServiceOuterClass = GreeterGrpc.class)
+    @GrpcService(grpcServiceOuterClass = GreeterGrpc.class,serviceName = "DemoServer",version = "1.0.0")
     public static class DemoService implements GreeterGrpc.Greeter {
 
         public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {

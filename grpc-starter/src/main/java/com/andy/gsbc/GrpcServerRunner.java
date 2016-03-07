@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -46,29 +47,38 @@ public class GrpcServerRunner implements CommandLineRunner {
     }
 
     public void run(String... strings) throws Exception {
-        System.out.println(1231);
-        logger.warn("======================");
         final ServerBuilder<?> serverBuilder = ServerBuilder.forPort(gRpcServerProperties.getPort());
 
         for (Object grpcService : applicationContext.getBeansWithAnnotation(GrpcService.class).values()) {
-            final Class grpcServiceOuterClass = AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).grpcServiceOuterClass();
-            final Optional<Method> bindServiceMethod = Arrays.asList(ReflectionUtils.getAllDeclaredMethods(grpcServiceOuterClass)).stream().filter(
-                    method -> bindServiceMethodName.equals(method.getName()) && 1 == method.getParameterCount() && method.getParameterTypes()[0].isAssignableFrom(grpcService.getClass())
-            ).findFirst();
+            final Class grpcServiceOuterClass =
+                    AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).grpcServiceOuterClass();
+            final String serviceName =
+                    AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).serviceName();
+            String version = AnnotationUtils.findAnnotation(grpcService.getClass(), GrpcService.class).version();
+            if (version.contains(".")){
+                version = version.replace(".","_");
+            }
+            final Optional<Method> bindServiceMethod =
+                    Arrays.asList(ReflectionUtils.getAllDeclaredMethods(grpcServiceOuterClass)).stream().filter(method ->
+                            bindServiceMethodName.equals(method.getName()) && 1 == method.getParameterCount()
+                                    && method.getParameterTypes()[0].isAssignableFrom(grpcService.getClass())).findFirst();
+
             if (bindServiceMethod.isPresent()) {
-                ServerServiceDefinition serviceDefinition = (ServerServiceDefinition) bindServiceMethod.get().invoke(null, grpcService);
+                ServerServiceDefinition serviceDefinition =
+                        (ServerServiceDefinition) bindServiceMethod.get().invoke(null, grpcService);
                 serverBuilder.addService(serviceDefinition);
 
                 Consul consul = Consul.builder().build();
                 AgentClient agentClient = consul.agentClient();
-                agentClient.register(gRpcServerProperties.getPort(), 3L, "MyService", "1");
-                agentClient.pass("1","test");
+                URL url = new URL("http://localhost:8080/health");
+                agentClient.register(gRpcServerProperties.getPort(), url, 3, serviceName, "1", version);
+                agentClient.register
                 logger.info("'{}' service has been registered.", serviceDefinition.getName());
             } else {
                 throw new IllegalArgumentException(String.format("Failed to find '%s' method on class %s.\r\n" +
-                                "Please make sure you've provided correct 'grpcServiceOuterClass' attribute for '%s' annotation.\r\n" +
-                                "It should be the protoc-generated outer class of your service."
-                        , bindServiceMethodName, grpcServiceOuterClass.getName(), GrpcService.class.getName()));
+                        "Please make sure you've provided correct 'grpcServiceOuterClass' attribute for '%s' annotation.\r\n"
+                        +
+                        "It should be the protoc-generated outer class of your service.", bindServiceMethodName, grpcServiceOuterClass.getName(), GrpcService.class.getName()));
             }
         }
 
@@ -93,11 +103,11 @@ public class GrpcServerRunner implements CommandLineRunner {
         awaitThread.setDaemon(false);
         awaitThread.start();
     }
-//
-//    @Override
-//    public void destroy() throws Exception {
-//        logger.info("Shutting down gRPC server ...");
-//        Optional.ofNullable(server).ifPresent(Server::shutdown);
-//        logger.info("gRPC server stopped.");
-//    }
+    //
+    //    @Override
+    //    public void destroy() throws Exception {
+    //        logger.info("Shutting down gRPC server ...");
+    //        Optional.ofNullable(server).ifPresent(Server::shutdown);
+    //        logger.info("gRPC server stopped.");
+    //    }
 }
