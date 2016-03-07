@@ -72,7 +72,6 @@ public class GrpcServerRunner implements CommandLineRunner {
                 AgentClient agentClient = consul.agentClient();
                 URL url = new URL("http://localhost:8080/health");
                 agentClient.register(gRpcServerProperties.getPort(), url, 3, serviceName, "1", version);
-                agentClient.register
                 logger.info("'{}' service has been registered.", serviceDefinition.getName());
             } else {
                 throw new IllegalArgumentException(String.format("Failed to find '%s' method on class %s.\r\n" +
