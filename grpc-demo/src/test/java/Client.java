@@ -1,5 +1,3 @@
-package com.andy.gsbc.demo;
-
 import com.andy.example.grpc.helloworld.GreeterGrpc;
 import com.andy.example.grpc.helloworld.HelloReply;
 import com.andy.example.grpc.helloworld.HelloRequest;
@@ -38,9 +36,10 @@ public class Client {
 
         List<ServiceHealth> nodes = healthClient.getHealthyServiceInstances("DemoServer").getResponse();
 
-        System.out.println(nodes.get(1));
+        System.out.println(nodes);
         managedChannel =
-                NettyChannelBuilder.forAddress(nodes.get(0).getService().getAddress(), nodes.get(0).getService().getPort()).usePlaintext(true).build();
+                NettyChannelBuilder.forAddress("192.168.0.104", 9988).usePlaintext(true).build();
+
         blockingStub = GreeterGrpc.newBlockingStub(managedChannel);
 
         try {
